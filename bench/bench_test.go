@@ -21,7 +21,7 @@ func (w *NoOpWriter) Write(p []byte) (n int, err error) {
 func BenchmarkDecode(b *testing.B) {
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2ZXIiLCJzdWIiOiJ1c2VyIiwiYXVkIjpbImNsaWVudCJdLCJleHAiOjE3NTAwOTI1NzEsIm5iZiI6MTc0NzQxNDE3MSwiaWF0IjoxNzQ3NDE0MTcxLCJqdGkiOiIxMjMifQ.Zl2QgWz-PFUvgPmAzFPyZ0h6g199EWXEkx45buWkUOM"
 	secretKeyBytes := []byte("ellogovna")
-	payload := jwgo.Payload
+	payload := jwgo.Payload{}
 
 	b.ResetTimer()
 	for b.Loop() {
