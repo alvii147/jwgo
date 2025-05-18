@@ -21,6 +21,7 @@ func BenchmarkEncode(b *testing.B) {
 	expirationTime := now.AddDate(0, 1, 0).Unix()
 	notBefore := now.AddDate(0, 0, -1).Unix()
 	key := []byte("ellogovna")
+	signer := jwgo.NewHS256(key)
 
 	b.Run("alvii147/jwgo.NewEncoder.Encode", func(b *testing.B) {
 		payload := jwgo.Payload{
@@ -36,7 +37,7 @@ func BenchmarkEncode(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, key).Encode(payload)
+			jwgo.NewEncoder(w, signer).Encode(payload)
 		}
 	})
 
@@ -64,6 +65,7 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 	expirationTime := now.AddDate(0, 1, 0).Unix()
 	notBefore := now.AddDate(0, 0, -1).Unix()
 	key := []byte("ellogovna")
+	signer := jwgo.NewHS256(key)
 
 	b.Run("alvii147/jwgo.NewEncoder.Encode", func(b *testing.B) {
 		payload := jwgo.Payload{
@@ -85,7 +87,7 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, key).Encode(payload)
+			jwgo.NewEncoder(w, signer).Encode(payload)
 		}
 	})
 
@@ -116,6 +118,7 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 func BenchmarkDecode(b *testing.B) {
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2ZXIiLCJzdWIiOiJ1c2VyIiwiYXVkIjpbImNsaWVudCJdLCJleHAiOjE3NTAwOTI1NzEsIm5iZiI6MTc0NzQxNDE3MSwiaWF0IjoxNzQ3NDE0MTcxLCJqdGkiOiIxMjMifQ.Zl2QgWz-PFUvgPmAzFPyZ0h6g199EWXEkx45buWkUOM"
 	key := []byte("ellogovna")
+	verifier := jwgo.NewHS256(key)
 
 	b.Run("alvii147/jwgo.NewDecoder.Decode", func(b *testing.B) {
 		payload := jwgo.Payload{}
@@ -123,7 +126,7 @@ func BenchmarkDecode(b *testing.B) {
 
 		for b.Loop() {
 			r := strings.NewReader(token)
-			jwgo.NewDecoder(r, key).Decode(&payload)
+			jwgo.NewDecoder(r, verifier).Decode(&payload)
 		}
 	})
 
