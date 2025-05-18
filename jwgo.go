@@ -57,12 +57,12 @@ type Signer interface {
 	fmt.Stringer
 	io.Writer
 	Header() string
-	Sign() []byte
+	Sign() ([]byte, error)
 }
 
 // Verifier represents a signature verification algorithm.
 type Verifier interface {
 	fmt.Stringer
 	io.Writer
-	Verify([]byte) bool
+	Verify([]byte) (bool, error)
 }

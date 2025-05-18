@@ -51,7 +51,11 @@ func (enc *encoder) Encode(v any) error {
 		return fmt.Errorf("enc.signer.Write failed for payload: %w", err)
 	}
 
-	signatureBytes := enc.signer.Sign()
+	signatureBytes, err := enc.signer.Sign()
+	if err != nil {
+		return fmt.Errorf("enc.signer.Sign failed: %w", err)
+	}
+
 	signatureBytesB64 := make([]byte, base64.RawURLEncoding.EncodedLen(len(signatureBytes)))
 	base64.RawURLEncoding.Encode(signatureBytesB64, signatureBytes)
 

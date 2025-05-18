@@ -76,7 +76,12 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return fmt.Errorf("dec.verifier.Write failed for payload: %w", err)
 	}
 
-	if !dec.verifier.Verify(signatureBytes) {
+	verified, err := dec.verifier.Verify(signatureBytes)
+	if err != nil {
+		return fmt.Errorf("dec.verifier.Verify failed: %w", err)
+	}
+
+	if !verified {
 		return errors.New("failed, invalid signature")
 	}
 
@@ -98,7 +103,7 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 	}
 
 	notBefore := v.GetNotBefore()
-	if notBefore != nil && time.Unix(*notBefore, 0).Before(now) {
+	if notBefore != nil && time.Unix(*notBefore, 0).After(now) {
 		return fmt.Errorf("failed, token cannot be parsed before %d", *notBefore)
 	}
 
