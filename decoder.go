@@ -39,8 +39,13 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return errors.New("failed, expected three sections")
 	}
 
-	headerBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(sections[0])))
-	_, err = base64.RawURLEncoding.Decode(headerBytes, []byte(sections[0]))
+	headerBytesB64 := []byte(sections[0])
+	payloadBytesB64 := []byte(sections[1])
+	signatureBytesB64 := []byte(sections[2])
+	separatorBytes := []byte(Separator)
+
+	headerBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(headerBytesB64)))
+	_, err = base64.RawURLEncoding.Decode(headerBytes, headerBytesB64)
 	if err != nil {
 		return fmt.Errorf("base64.RawURLEncoding.Decode failed for header: %w", err)
 	}
@@ -55,23 +60,25 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return fmt.Errorf("failed, unsupported algorithm :%s", header.Algorithm)
 	}
 
-	signatureBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(sections[2])))
-	_, err = base64.RawURLEncoding.Decode(signatureBytes, []byte(sections[2]))
+	signatureBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(signatureBytesB64)))
+	_, err = base64.RawURLEncoding.Decode(signatureBytes, signatureBytesB64)
 	if err != nil {
 		return fmt.Errorf("base64.RawURLEncoding.Decode failed for payload: %w", err)
 	}
 
-	_, err = dec.verifier.Write([]byte(sections[0]))
+	dec.verifier.Grow(len(headerBytesB64) + len(separatorBytes) + len(payloadBytesB64))
+
+	_, err = dec.verifier.Write(headerBytesB64)
 	if err != nil {
 		return fmt.Errorf("dec.verifier.Write failed for header: %w", err)
 	}
 
-	_, err = dec.verifier.Write([]byte(Separator))
+	_, err = dec.verifier.Write(separatorBytes)
 	if err != nil {
 		return fmt.Errorf("dec.verifier.Write failed for separator: %w", err)
 	}
 
-	_, err = dec.verifier.Write([]byte(sections[1]))
+	_, err = dec.verifier.Write(payloadBytesB64)
 	if err != nil {
 		return fmt.Errorf("dec.verifier.Write failed for payload: %w", err)
 	}
@@ -85,8 +92,8 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return errors.New("failed, invalid signature")
 	}
 
-	payloadBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(sections[1])))
-	_, err = base64.RawURLEncoding.Decode(payloadBytes, []byte(sections[1]))
+	payloadBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(payloadBytesB64)))
+	_, err = base64.RawURLEncoding.Decode(payloadBytes, payloadBytesB64)
 	if err != nil {
 		return fmt.Errorf("base64.RawURLEncoding.Decode failed for payload: %w", err)
 	}

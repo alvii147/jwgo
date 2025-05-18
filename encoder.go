@@ -35,18 +35,20 @@ func (enc *encoder) Encode(v any) error {
 	base64.RawURLEncoding.Encode(payloadBytesB64, payloadBytes)
 	headerBytesB64 := []byte(enc.signer.Header())
 
+	separatorBytes := []byte(Separator)
+	enc.signer.Grow(len(headerBytesB64) + len(separatorBytes) + len(payloadBytesB64))
+
 	_, err = enc.signer.Write(headerBytesB64)
 	if err != nil {
 		return fmt.Errorf("enc.signer.Write failed for header: %w", err)
 	}
 
-	separatorBytes := []byte(Separator)
 	_, err = enc.signer.Write(separatorBytes)
 	if err != nil {
 		return fmt.Errorf("enc.signer.Write failed for separator: %w", err)
 	}
 
-	_, err = enc.signer.Write([]byte(payloadBytesB64))
+	_, err = enc.signer.Write(payloadBytesB64)
 	if err != nil {
 		return fmt.Errorf("enc.signer.Write failed for payload: %w", err)
 	}

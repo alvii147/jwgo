@@ -56,6 +56,7 @@ type TimeConstrainedPayload interface {
 type Signer interface {
 	fmt.Stringer
 	io.Writer
+	Grow(n int)
 	Header() string
 	Sign() ([]byte, error)
 }
@@ -64,5 +65,6 @@ type Signer interface {
 type Verifier interface {
 	fmt.Stringer
 	io.Writer
+	Grow(n int)
 	Verify([]byte) (bool, error)
 }

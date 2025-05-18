@@ -28,17 +28,17 @@ const (
 	HS512Size = 64
 )
 
-// HMACSHA signs and verifies JWT using HMAC SHA signing.
-type HMACSHA struct {
+// HMAC signs and verifies JWT using HMAC SHA signing.
+type HMAC struct {
 	name   string
 	header string
 	size   int
 	hasher hash.Hash
 }
 
-// NewHS256 creates and returns a new [HMACSHA] with HMAC SHA-256 signing.
-func NewHS256(key []byte) *HMACSHA {
-	return &HMACSHA{
+// NewHS256 creates and returns a new [HMAC] with HMAC SHA-256 signing.
+func NewHS256(key []byte) *HMAC {
+	return &HMAC{
 		name:   HS256,
 		header: HS256Header,
 		size:   HS256Size,
@@ -46,9 +46,9 @@ func NewHS256(key []byte) *HMACSHA {
 	}
 }
 
-// NewHS384 creates and returns a new [HMACSHA] with HMAC SHA-384 signing.
-func NewHS384(key []byte) *HMACSHA {
-	return &HMACSHA{
+// NewHS384 creates and returns a new [HMAC] with HMAC SHA-384 signing.
+func NewHS384(key []byte) *HMAC {
+	return &HMAC{
 		name:   HS384,
 		header: HS384Header,
 		size:   HS384Size,
@@ -56,9 +56,9 @@ func NewHS384(key []byte) *HMACSHA {
 	}
 }
 
-// NewHS512 creates and returns a new [HMACSHA] with HMAC SHA-512 signing.
-func NewHS512(key []byte) *HMACSHA {
-	return &HMACSHA{
+// NewHS512 creates and returns a new [HMAC] with HMAC SHA-512 signing.
+func NewHS512(key []byte) *HMAC {
+	return &HMAC{
 		name:   HS512,
 		header: HS512Header,
 		size:   HS512Size,
@@ -67,29 +67,34 @@ func NewHS512(key []byte) *HMACSHA {
 }
 
 // String returns the name of the algorithm.
-func (h *HMACSHA) String() string {
+func (h *HMAC) String() string {
 	return h.name
 }
 
 // Header returns the pre-computed base64-encoded header.
-func (h *HMACSHA) Header() string {
+func (h *HMAC) Header() string {
 	return h.header
 }
 
+// Grow grows the allocated size of the underlying data.
+func (h *HMAC) Grow(n int) {
+	// no data to grow
+}
+
 // Write writes data for signing.
-func (h *HMACSHA) Write(p []byte) (int, error) {
+func (h *HMAC) Write(p []byte) (int, error) {
 	return h.hasher.Write(p)
 }
 
 // Sign signs the written data.
-func (h *HMACSHA) Sign() ([]byte, error) {
+func (h *HMAC) Sign() ([]byte, error) {
 	s := make([]byte, 0, h.size)
 	s = h.hasher.Sum(s)
 	return s, nil
 }
 
 // Verify verifies the written data's signature against a given signature.
-func (h *HMACSHA) Verify(signature []byte) (bool, error) {
+func (h *HMAC) Verify(signature []byte) (bool, error) {
 	s, _ := h.Sign()
 	return hmac.Equal(s, signature), nil
 }

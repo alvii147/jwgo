@@ -25,7 +25,7 @@ type ED25519 struct {
 // NewEdDSA creates and returns a new [ED25519].
 func NewEdDSA(publicKey ed25519.PublicKey, privateKey ed25519.PrivateKey) *ED25519 {
 	return &ED25519{
-		data:       nil,
+		data:       make([]byte, 0),
 		publicKey:  publicKey,
 		privateKey: privateKey,
 	}
@@ -39,6 +39,13 @@ func (e *ED25519) String() string {
 // Header returns the pre-computed base64-encoded header.
 func (e *ED25519) Header() string {
 	return EdDSAHeader
+}
+
+// Grow grows the allocated size of the underlying data.
+func (e *ED25519) Grow(n int) {
+	newData := make([]byte, len(e.data), len(e.data)+n)
+	copy(newData, e.data)
+	e.data = newData
 }
 
 // Write writes data for signing.

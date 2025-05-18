@@ -1,6 +1,10 @@
 package bench_test
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -116,8 +120,21 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 }
 
 func BenchmarkDecode(b *testing.B) {
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2ZXIiLCJzdWIiOiJ1c2VyIiwiYXVkIjpbImNsaWVudCJdLCJleHAiOjE3NTAwOTI1NzEsIm5iZiI6MTc0NzQxNDE3MSwiaWF0IjoxNzQ3NDE0MTcxLCJqdGkiOiIxMjMifQ.Zl2QgWz-PFUvgPmAzFPyZ0h6g199EWXEkx45buWkUOM"
+	issuedAt := time.Now().UTC().Unix()
+	expirationTime := time.Now().UTC().AddDate(0, 0, 1).Unix()
+	notBefore := time.Now().UTC().AddDate(0, 0, -1).Unix()
+
+	tokenHeader := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+	tokenPayload := base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf(`{"iss":"server","sub":"user","aud":["client"],"exp":%d,"nbf":%d,"iat":%d,"jti":"123"}`, expirationTime, notBefore, issuedAt)))
+
 	key := []byte("ellogovna")
+	h := hmac.New(sha256.New, key)
+	_, err := h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(h.Sum(nil))
 	verifier := jwgo.NewHS256(key)
 
 	b.Run("alvii147/jwgo.NewDecoder.Decode", func(b *testing.B) {
@@ -126,7 +143,10 @@ func BenchmarkDecode(b *testing.B) {
 
 		for b.Loop() {
 			r := strings.NewReader(token)
-			jwgo.NewDecoder(r, verifier).Decode(&payload)
+			err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+			if err != nil {
+				b.Fatalf("Decode failed %v", err)
+			}
 		}
 	})
 
@@ -135,9 +155,12 @@ func BenchmarkDecode(b *testing.B) {
 		b.ResetTimer()
 
 		for b.Loop() {
-			jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) {
+			_, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) {
 				return key, nil
 			})
+			if err != nil {
+				b.Fatalf("ParseWithClaims failed %v", err)
+			}
 		}
 	})
 }
