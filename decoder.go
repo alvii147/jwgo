@@ -1,13 +1,10 @@
 package jwgo
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"hash"
 	"io"
 	"strings"
 	"time"
@@ -17,15 +14,15 @@ import (
 type decoder struct {
 	// r is the reader from which the JWT will be decoded.
 	r io.Reader
-	// key is the signing key.
-	key []byte
+	// verifier is used to verify the JWT.
+	verifier Verifier
 }
 
 // NewDecoder creates and returns a new [decoder].
-func NewDecoder(r io.Reader, key []byte) *decoder {
+func NewDecoder(r io.Reader, verifier Verifier) *decoder {
 	dec := &decoder{}
 	dec.r = r
-	dec.key = key
+	dec.verifier = verifier
 
 	return dec
 }
@@ -54,14 +51,7 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return fmt.Errorf("json.Unmarshal failed for header: %w", err)
 	}
 
-	var h hash.Hash
-	var eq func([]byte, []byte) bool
-
-	switch header.Algorithm {
-	case AlgorithmHS256:
-		h = hmac.New(sha256.New, dec.key)
-		eq = hmac.Equal
-	default:
+	if header.Algorithm != dec.verifier.String() {
 		return fmt.Errorf("failed, unsupported algorithm :%s", header.Algorithm)
 	}
 
@@ -71,22 +61,22 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return fmt.Errorf("base64.RawURLEncoding.Decode failed for payload: %w", err)
 	}
 
-	_, err = h.Write([]byte(sections[0]))
+	_, err = dec.verifier.Write([]byte(sections[0]))
 	if err != nil {
-		return fmt.Errorf("h.Write failed for header: %w", err)
+		return fmt.Errorf("dec.verifier.Write failed for header: %w", err)
 	}
 
-	_, err = h.Write([]byte(Separator))
+	_, err = dec.verifier.Write([]byte(Separator))
 	if err != nil {
-		return fmt.Errorf("h.Write failed for separator: %w", err)
+		return fmt.Errorf("dec.verifier.Write failed for separator: %w", err)
 	}
 
-	_, err = h.Write([]byte(sections[1]))
+	_, err = dec.verifier.Write([]byte(sections[1]))
 	if err != nil {
-		return fmt.Errorf("h.Write failed for payload: %w", err)
+		return fmt.Errorf("dec.verifier.Write failed for payload: %w", err)
 	}
 
-	if !eq(signatureBytes, h.Sum(nil)) {
+	if !dec.verifier.Verify(signatureBytes) {
 		return errors.New("failed, invalid signature")
 	}
 

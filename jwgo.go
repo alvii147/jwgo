@@ -1,15 +1,11 @@
 package jwgo
 
-// Algorithm represents a signing algorithm.
-type Algorithm string
+import (
+	"fmt"
+	"io"
+)
 
 const (
-	// AlgorithmHS256 represents HMAC SHA-256 signing.
-	AlgorithmHS256 Algorithm = "HS256"
-	// HeaderHS256 is the pre-computed base64-encoded JWT header for HMAC SHA-256.
-	HeaderHS256 string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-	// CheckSumLenHS256 is the checksum length for HMAC SHA-256.
-	CheckSumLenHS256 int = 32
 	// Separator is the character separating different sections on the JWT.
 	Separator string = "."
 )
@@ -17,7 +13,7 @@ const (
 // Header represents the cryptographic operations applied to the JWT.
 type Header struct {
 	// Algorithm is the signing algorithm used to sign the JWT.
-	Algorithm Algorithm `json:"alg"`
+	Algorithm string `json:"alg"`
 	// Type represents the media type, which is always "JWT" in this case.
 	Type string `json:"typ"`
 }
@@ -54,4 +50,19 @@ func (p *Payload) GetNotBefore() *int64 {
 type TimeConstrainedPayload interface {
 	GetExpirationTime() *int64
 	GetNotBefore() *int64
+}
+
+// Signer represents a signing algorithm.
+type Signer interface {
+	fmt.Stringer
+	io.Writer
+	Header() string
+	Sign() []byte
+}
+
+// Verifier represents a signature verification algorithm.
+type Verifier interface {
+	fmt.Stringer
+	io.Writer
+	Verify([]byte) bool
 }

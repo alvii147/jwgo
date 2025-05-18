@@ -16,6 +16,7 @@ func TestEncodeHS256Success(t *testing.T) {
 	expirationTime := time.Date(2023, 5, 5, 6, 7, 8, 0, time.UTC).Unix()
 	notBefore := time.Date(2023, 3, 5, 6, 7, 8, 0, time.UTC).Unix()
 	key := []byte("ellogovna")
+	signer := jwgo.NewHS256(key)
 
 	payload := jwgo.Payload{
 		Issuer:         "server",
@@ -29,7 +30,7 @@ func TestEncodeHS256Success(t *testing.T) {
 
 	var w strings.Builder
 
-	err := jwgo.NewEncoder(&w, jwgo.AlgorithmHS256, key).Encode(&payload)
+	err := jwgo.NewEncoder(&w, signer).Encode(&payload)
 	if err != nil {
 		t.Fatalf("jwgo.NewEncoder failed %v", err)
 	}
