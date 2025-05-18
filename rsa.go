@@ -1,0 +1,115 @@
+package jwgo
+
+import (
+	"crypto"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/sha512"
+	"hash"
+)
+
+const (
+	// RS256 represents RSA SHA-256 signing.
+	RS256 = "RS256"
+	// RS256Header is the pre-computed base64-encoded JWT header for RS256.
+	RS256Header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+	// RS256Size is the signature size for RS256.
+	RS256Size = 32
+	// RS384 represents RSA SHA-384 signing.
+	RS384 = "RS384"
+	// RS384Header is the pre-computed base64-encoded JWT header for RS384.
+	RS384Header = "eyJhbGciOiJSUzM4NCIsInR5cCI6IkpXVCJ9"
+	// RS384Size is the signature size for RS384.
+	RS384Size = 48
+	// RS512 represents RSA SHA-512 signing.
+	RS512 = "RS512"
+	// RS512Header is the pre-computed base64-encoded JWT header for RS512.
+	RS512Header = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9"
+	// RS512Size is the signature size for RS512.
+	RS512Size = 64
+)
+
+// RSA signs and verifies JWT using RSA signing.
+type RSA struct {
+	name       string
+	header     string
+	size       int
+	hash       crypto.Hash
+	hasher     hash.Hash
+	publicKey  *rsa.PublicKey
+	privateKey *rsa.PrivateKey
+}
+
+// NewRS256 creates and returns a new [RSA] with RSA SHA-256 signing.
+func NewRS256(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
+	return &RSA{
+		name:       RS256,
+		header:     RS256Header,
+		size:       HS256Size,
+		hash:       crypto.SHA256,
+		hasher:     sha256.New(),
+		publicKey:  publicKey,
+		privateKey: privateKey,
+	}
+}
+
+// NewRS384 creates and returns a new [RSA] with RSA SHA-384 signing.
+func NewRS384(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
+	return &RSA{
+		name:       RS384,
+		header:     RS384Header,
+		size:       RS384Size,
+		hash:       crypto.SHA384,
+		hasher:     sha512.New384(),
+		publicKey:  publicKey,
+		privateKey: privateKey,
+	}
+}
+
+// NewRS512 creates and returns a new [RSA] with RSA SHA-512 signing.
+func NewRS512(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
+	return &RSA{
+		name:       RS512,
+		header:     RS512Header,
+		size:       RS512Size,
+		hash:       crypto.SHA512,
+		hasher:     sha512.New(),
+		publicKey:  publicKey,
+		privateKey: privateKey,
+	}
+}
+
+// String returns the name of the algorithm.
+func (r *RSA) String() string {
+	return r.name
+}
+
+// Header returns the pre-computed base64-encoded header.
+func (r *RSA) Header() string {
+	return r.header
+}
+
+// Grow grows the allocated size of the underlying data.
+func (r *RSA) Grow(n int) {
+	// no data to grow
+}
+
+// Write writes data for signing.
+func (r *RSA) Write(p []byte) (int, error) {
+	return r.hasher.Write(p)
+}
+
+// Sign signs the written data.
+func (r *RSA) Sign() ([]byte, error) {
+	s := make([]byte, 0, r.size)
+	s = r.hasher.Sum(s)
+	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, s)
+}
+
+// Sign signs the written data.
+func (r *RSA) Verify(signature []byte) (bool, error) {
+	s := make([]byte, 0, r.size)
+	s = r.hasher.Sum(s)
+	return rsa.VerifyPKCS1v15(r.publicKey, r.hash, s, signature) == nil, nil
+}
