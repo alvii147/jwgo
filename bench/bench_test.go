@@ -20,7 +20,7 @@ func BenchmarkEncode(b *testing.B) {
 	issuedAt := now.Unix()
 	expirationTime := now.AddDate(0, 1, 0).Unix()
 	notBefore := now.AddDate(0, 0, -1).Unix()
-	keyBytes := []byte("ellogovna")
+	key := []byte("ellogovna")
 
 	b.Run("alvii147/jwgo.NewEncoder.Encode", func(b *testing.B) {
 		payload := jwgo.Payload{
@@ -36,7 +36,7 @@ func BenchmarkEncode(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, keyBytes).Encode(payload)
+			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, key).Encode(payload)
 		}
 	})
 
@@ -53,7 +53,7 @@ func BenchmarkEncode(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(keyBytes)
+			jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(key)
 		}
 	})
 }
@@ -63,7 +63,7 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 	issuedAt := now.Unix()
 	expirationTime := now.AddDate(0, 1, 0).Unix()
 	notBefore := now.AddDate(0, 0, -1).Unix()
-	keyBytes := []byte("ellogovna")
+	key := []byte("ellogovna")
 
 	b.Run("alvii147/jwgo.NewEncoder.Encode", func(b *testing.B) {
 		payload := jwgo.Payload{
@@ -85,7 +85,7 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, keyBytes).Encode(payload)
+			jwgo.NewEncoder(w, jwgo.AlgorithmHS256, key).Encode(payload)
 		}
 	})
 
@@ -108,14 +108,14 @@ func BenchmarkEncodeLargePayload(b *testing.B) {
 
 		b.ResetTimer()
 		for b.Loop() {
-			jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(keyBytes)
+			jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(key)
 		}
 	})
 }
 
 func BenchmarkDecode(b *testing.B) {
 	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXJ2ZXIiLCJzdWIiOiJ1c2VyIiwiYXVkIjpbImNsaWVudCJdLCJleHAiOjE3NTAwOTI1NzEsIm5iZiI6MTc0NzQxNDE3MSwiaWF0IjoxNzQ3NDE0MTcxLCJqdGkiOiIxMjMifQ.Zl2QgWz-PFUvgPmAzFPyZ0h6g199EWXEkx45buWkUOM"
-	keyBytes := []byte("ellogovna")
+	key := []byte("ellogovna")
 
 	b.Run("alvii147/jwgo.NewDecoder.Decode", func(b *testing.B) {
 		payload := jwgo.Payload{}
@@ -123,7 +123,7 @@ func BenchmarkDecode(b *testing.B) {
 
 		for b.Loop() {
 			r := strings.NewReader(token)
-			jwgo.NewDecoder(r, keyBytes).Decode(&payload)
+			jwgo.NewDecoder(r, key).Decode(&payload)
 		}
 	})
 
@@ -133,7 +133,7 @@ func BenchmarkDecode(b *testing.B) {
 
 		for b.Loop() {
 			jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (interface{}, error) {
-				return keyBytes, nil
+				return key, nil
 			})
 		}
 	})

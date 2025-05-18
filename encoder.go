@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"strings"
 )
 
 // encoder is a JWT encoder.
@@ -19,6 +18,8 @@ type encoder struct {
 	h hash.Hash
 	// header is the pre-computed header section of the JWT.
 	header []byte
+	// signatureLen is the length of the signature.
+	signatureLen int
 	// err represents any error that occurred in the constructor.
 	err error
 }
@@ -32,6 +33,7 @@ func NewEncoder(w io.Writer, alg Algorithm, key []byte) *encoder {
 	case AlgorithmHS256:
 		enc.h = hmac.New(sha256.New, key)
 		enc.header = []byte(HeaderHS256)
+		enc.signatureLen = CheckSumLenHS256
 	default:
 		enc.err = fmt.Errorf("failed, unsupported algorithm :%s", alg)
 	}
@@ -70,12 +72,10 @@ func (enc *encoder) Encode(v any) error {
 		return fmt.Errorf("enc.h.Write failed for payload: %w", err)
 	}
 
-	signatureBytes := enc.h.Sum(nil)
+	signatureBytes := make([]byte, 0, enc.signatureLen)
+	signatureBytes = enc.h.Sum(signatureBytes)
 	signatureBytesB64 := make([]byte, base64.RawURLEncoding.EncodedLen(len(signatureBytes)))
 	base64.RawURLEncoding.Encode(signatureBytesB64, signatureBytes)
-
-	var sb strings.Builder
-	sb.Grow(len(enc.header) + len(separatorBytes) + len(payloadBytesB64) + len(separatorBytes) + len(signatureBytesB64))
 
 	_, err = enc.w.Write(enc.header)
 	if err != nil {

@@ -8,6 +8,8 @@ const (
 	AlgorithmHS256 Algorithm = "HS256"
 	// HeaderHS256 is the pre-computed base64-encoded JWT header for HMAC SHA-256.
 	HeaderHS256 string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+	// CheckSumLenHS256 is the checksum length for HMAC SHA-256.
+	CheckSumLenHS256 int = 32
 	// Separator is the character separating different sections on the JWT.
 	Separator string = "."
 )
