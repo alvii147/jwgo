@@ -1,0 +1,500 @@
+package jwgo_test
+
+import (
+	"crypto"
+	"crypto/ed25519"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/sha512"
+	"encoding/base64"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/alvii147/jwgo"
+)
+
+type NoOpWriter struct{}
+
+func (w *NoOpWriter) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
+func newTestLargePayload(t testing.TB) (*jwgo.Payload, string) {
+	t.Helper()
+
+	issuedAt := time.Now().UTC().Unix()
+	expirationTime := time.Now().UTC().AddDate(0, 0, 1).Unix()
+	notBefore := time.Now().UTC().AddDate(0, 0, -1).Unix()
+
+	payload := &jwgo.Payload{
+		Issuer:  strings.Repeat("server", 20),
+		Subject: strings.Repeat("user", 20),
+		Audience: []string{
+			strings.Repeat("client", 5),
+			strings.Repeat("client", 5),
+			strings.Repeat("client", 5),
+			strings.Repeat("client", 5),
+			strings.Repeat("client", 5),
+		},
+		ExpirationTime: &expirationTime,
+		NotBefore:      &notBefore,
+		IssuedAt:       &issuedAt,
+		JWTID:          strings.Repeat("123", 5),
+	}
+	wantPayload := fmt.Sprintf(`{"iss":"server","sub":"user","aud":["client"],"exp":%d,"nbf":%d,"iat":%d,"jti":"123"}`, expirationTime, notBefore, issuedAt)
+
+	return payload, wantPayload
+}
+
+func BenchmarkEncodeHS256(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS256(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeHS256LargePayload(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS256(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeHS256(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "HS256")
+	key := []byte("ellogovna")
+
+	h := hmac.New(sha256.New, key)
+	_, err := h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewHS256(key)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeHS384(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS384(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeHS384LargePayload(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS384(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeHS384(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "HS384")
+	key := []byte("ellogovna")
+
+	h := hmac.New(sha512.New384, key)
+	_, err := h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewHS384(key)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeHS512(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS512(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeHS512LargePayload(b *testing.B) {
+	key := []byte("ellogovna")
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewHS512(key)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeHS512(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "HS512")
+	key := []byte("ellogovna")
+
+	h := hmac.New(sha512.New, key)
+	_, err := h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewHS512(key)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS256(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS256(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS256LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS256(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeRS256(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "RS256")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha256.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, h.Sum(nil))
+	if err != nil {
+		b.Fatalf("rsa.SignPKCS1v15 %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewRS256(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS384(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS384(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS384LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS384(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeRS384(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "RS384")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New384()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA384, h.Sum(nil))
+	if err != nil {
+		b.Fatalf("rsa.SignPKCS1v15 %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewRS384(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS512(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS512(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeRS512LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewRS512(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeRS512(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "RS512")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA512, h.Sum(nil))
+	if err != nil {
+		b.Fatalf("rsa.SignPKCS1v15 %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewRS512(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeEdDSA(b *testing.B) {
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		b.Fatalf("ed25519.GenerateKey %v", err)
+	}
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewEdDSA(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodeEdDSALargePayload(b *testing.B) {
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		b.Fatalf("ed25519.GenerateKey %v", err)
+	}
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewEdDSA(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodeEdDSA(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "EdDSA")
+
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		b.Fatalf("ed25519.GenerateKey failed %v", err)
+	}
+
+	signatureBytes, err := privateKey.Sign(rand.Reader, []byte(tokenHeader+"."+tokenPayload), crypto.Hash(0))
+	if err != nil {
+		b.Fatalf("privateKey.Sign failed %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewEdDSA(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
