@@ -25,9 +25,11 @@ const (
 )
 
 var (
+	// PSSSignOptions represents options for RSA-PSS signing.
 	PSSSignOptions = &rsa.PSSOptions{
 		SaltLength: rsa.PSSSaltLengthEqualsHash,
 	}
+	// PSSVerifyOptions represents options for RSA-PSS verification.
 	PSSVerifyOptions = &rsa.PSSOptions{
 		SaltLength: rsa.PSSSaltLengthAuto,
 	}
@@ -101,14 +103,10 @@ func (rp *RSAPSS) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (rp *RSAPSS) Sign() ([]byte, error) {
-	s := make([]byte, 0, rp.hasher.Size())
-	s = rp.hasher.Sum(s)
-	return rsa.SignPSS(rand.Reader, rp.privateKey, rp.hash, s, PSSSignOptions)
+	return rsa.SignPSS(rand.Reader, rp.privateKey, rp.hash, rp.hasher.Sum(nil), PSSSignOptions)
 }
 
 // Sign signs the written data.
 func (rp *RSAPSS) Verify(signature []byte) (bool, error) {
-	s := make([]byte, 0, rp.hasher.Size())
-	s = rp.hasher.Sum(s)
-	return rsa.VerifyPSS(rp.publicKey, rp.hash, s, signature, PSSVerifyOptions) == nil, nil
+	return rsa.VerifyPSS(rp.publicKey, rp.hash, rp.hasher.Sum(nil), signature, PSSVerifyOptions) == nil, nil
 }

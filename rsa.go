@@ -92,14 +92,10 @@ func (r *RSAPKCS1v15) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (r *RSAPKCS1v15) Sign() ([]byte, error) {
-	s := make([]byte, 0, r.hasher.Size())
-	s = r.hasher.Sum(s)
-	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, s)
+	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, r.hasher.Sum(nil))
 }
 
 // Sign signs the written data.
 func (r *RSAPKCS1v15) Verify(signature []byte) (bool, error) {
-	s := make([]byte, 0, r.hasher.Size())
-	s = r.hasher.Sum(s)
-	return rsa.VerifyPKCS1v15(r.publicKey, r.hash, s, signature) == nil, nil
+	return rsa.VerifyPKCS1v15(r.publicKey, r.hash, r.hasher.Sum(nil), signature) == nil, nil
 }

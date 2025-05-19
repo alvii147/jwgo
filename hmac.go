@@ -78,14 +78,10 @@ func (h *HMAC) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (h *HMAC) Sign() ([]byte, error) {
-	s := make([]byte, 0, h.hasher.Size())
-	s = h.hasher.Sum(s)
-	return s, nil
+	return h.hasher.Sum(nil), nil
 }
 
 // Verify verifies the written data's signature against a given signature.
 func (h *HMAC) Verify(signature []byte) (bool, error) {
-	s := make([]byte, 0, h.hasher.Size())
-	s = h.hasher.Sum(s)
-	return hmac.Equal(s, signature), nil
+	return hmac.Equal(h.hasher.Sum(nil), signature), nil
 }

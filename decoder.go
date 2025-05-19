@@ -3,7 +3,6 @@ package jwgo
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -36,7 +35,7 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 
 	sections := strings.SplitN(string(token), Separator, 3)
 	if len(sections) != 3 {
-		return errors.New("failed, expected three sections")
+		return ErrInvalidToken
 	}
 
 	headerBytesB64 := []byte(sections[0])
@@ -47,23 +46,23 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 	headerBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(headerBytesB64)))
 	_, err = base64.RawURLEncoding.Decode(headerBytes, headerBytesB64)
 	if err != nil {
-		return fmt.Errorf("base64.RawURLEncoding.Decode failed for header: %w", err)
+		return ErrInvalidToken
 	}
 
 	header := Header{}
 	err = json.Unmarshal(headerBytes, &header)
 	if err != nil {
-		return fmt.Errorf("json.Unmarshal failed for header: %w", err)
+		return ErrInvalidToken
 	}
 
 	if header.Algorithm != dec.verifier.String() {
-		return fmt.Errorf("failed, unsupported algorithm :%s", header.Algorithm)
+		return ErrUnsupportedAlgorithm
 	}
 
 	signatureBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(signatureBytesB64)))
 	_, err = base64.RawURLEncoding.Decode(signatureBytes, signatureBytesB64)
 	if err != nil {
-		return fmt.Errorf("base64.RawURLEncoding.Decode failed for payload: %w", err)
+		return ErrInvalidToken
 	}
 
 	dec.verifier.Grow(len(headerBytesB64) + len(separatorBytes) + len(payloadBytesB64))
@@ -89,29 +88,33 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 	}
 
 	if !verified {
-		return errors.New("failed, invalid signature")
+		return ErrInvalidSignature
 	}
 
 	payloadBytes := make([]byte, base64.RawURLEncoding.DecodedLen(len(payloadBytesB64)))
 	_, err = base64.RawURLEncoding.Decode(payloadBytes, payloadBytesB64)
 	if err != nil {
-		return fmt.Errorf("base64.RawURLEncoding.Decode failed for payload: %w", err)
+		return ErrInvalidToken
 	}
 
 	err = json.Unmarshal(payloadBytes, v)
 	if err != nil {
-		return fmt.Errorf("json.Unmarshal failed for payload: %w", err)
+		return ErrInvalidToken
 	}
 
-	now := time.Now().UTC()
-	expirationTime := v.GetExpirationTime()
-	if expirationTime != nil && time.Unix(*expirationTime, 0).Before(now) {
-		return fmt.Errorf("failed, token expired %d", *expirationTime)
+	expirationTime, notBefore, issuedAt := v.GetTimes()
+	now := time.Now().UTC().Unix()
+
+	if expirationTime != nil && *expirationTime < now {
+		return ErrExpired
 	}
 
-	notBefore := v.GetNotBefore()
-	if notBefore != nil && time.Unix(*notBefore, 0).After(now) {
-		return fmt.Errorf("failed, token cannot be parsed before %d", *notBefore)
+	if notBefore != nil && *notBefore > now {
+		return ErrNotYetEffectiveToken
+	}
+
+	if issuedAt != nil && *issuedAt > now {
+		return ErrInvalidIssuedAt
 	}
 
 	return nil

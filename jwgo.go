@@ -1,10 +1,5 @@
 package jwgo
 
-import (
-	"fmt"
-	"io"
-)
-
 const (
 	// Separator is the character separating different sections on the JWT.
 	Separator string = "."
@@ -36,35 +31,12 @@ type Payload struct {
 	JWTID string `json:"jti,omitempty"`
 }
 
-// GetExpirationTime gets the expiration time of a [Payload].
-func (p *Payload) GetExpirationTime() *int64 {
-	return p.ExpirationTime
+// GetTimes gets the expiration, not before, and issued at times of a [Payload].
+func (p *Payload) GetTimes() (*int64, *int64, *int64) {
+	return p.ExpirationTime, p.NotBefore, p.IssuedAt
 }
 
-// GetNotBefore gets the not before time of a [Payload].
-func (p *Payload) GetNotBefore() *int64 {
-	return p.NotBefore
-}
-
-// TimeConstrainedPayload represents payloads with expiration and not before time constraints.
+// TimeConstrainedPayload represents payloads with timed constraints.
 type TimeConstrainedPayload interface {
-	GetExpirationTime() *int64
-	GetNotBefore() *int64
-}
-
-// Signer represents a signing algorithm.
-type Signer interface {
-	fmt.Stringer
-	io.Writer
-	Grow(n int)
-	Header() string
-	Sign() ([]byte, error)
-}
-
-// Verifier represents a signature verification algorithm.
-type Verifier interface {
-	fmt.Stringer
-	io.Writer
-	Grow(n int)
-	Verify([]byte) (bool, error)
+	GetTimes() (*int64, *int64, *int64)
 }
