@@ -14,27 +14,20 @@ const (
 	RS256 = "RS256"
 	// RS256Header is the pre-computed base64-encoded JWT header for RS256.
 	RS256Header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
-	// RS256Size is the signature size for RS256.
-	RS256Size = 32
 	// RS384 represents RSA SHA-384 signing.
 	RS384 = "RS384"
 	// RS384Header is the pre-computed base64-encoded JWT header for RS384.
 	RS384Header = "eyJhbGciOiJSUzM4NCIsInR5cCI6IkpXVCJ9"
-	// RS384Size is the signature size for RS384.
-	RS384Size = 48
 	// RS512 represents RSA SHA-512 signing.
 	RS512 = "RS512"
 	// RS512Header is the pre-computed base64-encoded JWT header for RS512.
 	RS512Header = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9"
-	// RS512Size is the signature size for RS512.
-	RS512Size = 64
 )
 
 // RSA signs and verifies JWT using RSA signing.
 type RSA struct {
 	name       string
 	header     string
-	size       int
 	hash       crypto.Hash
 	hasher     hash.Hash
 	publicKey  *rsa.PublicKey
@@ -46,7 +39,6 @@ func NewRS256(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
 	return &RSA{
 		name:       RS256,
 		header:     RS256Header,
-		size:       HS256Size,
 		hash:       crypto.SHA256,
 		hasher:     sha256.New(),
 		publicKey:  publicKey,
@@ -59,7 +51,6 @@ func NewRS384(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
 	return &RSA{
 		name:       RS384,
 		header:     RS384Header,
-		size:       RS384Size,
 		hash:       crypto.SHA384,
 		hasher:     sha512.New384(),
 		publicKey:  publicKey,
@@ -72,7 +63,6 @@ func NewRS512(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *RSA {
 	return &RSA{
 		name:       RS512,
 		header:     RS512Header,
-		size:       RS512Size,
 		hash:       crypto.SHA512,
 		hasher:     sha512.New(),
 		publicKey:  publicKey,
@@ -102,14 +92,14 @@ func (r *RSA) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (r *RSA) Sign() ([]byte, error) {
-	s := make([]byte, 0, r.size)
+	s := make([]byte, 0, r.hasher.Size())
 	s = r.hasher.Sum(s)
 	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, s)
 }
 
 // Sign signs the written data.
 func (r *RSA) Verify(signature []byte) (bool, error) {
-	s := make([]byte, 0, r.size)
+	s := make([]byte, 0, r.hasher.Size())
 	s = r.hasher.Sum(s)
 	return rsa.VerifyPKCS1v15(r.publicKey, r.hash, s, signature) == nil, nil
 }

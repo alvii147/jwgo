@@ -12,27 +12,20 @@ const (
 	HS256 = "HS256"
 	// HS256Header is the pre-computed base64-encoded JWT header for HMAC SHA-256.
 	HS256Header = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-	// HS256Size is the signature size for HMAC SHA-256.
-	HS256Size = 32
 	// HS384 represents HMAC SHA-384 signing.
 	HS384 = "HS384"
 	// HS384Header is the pre-computed base64-encoded JWT header for HMAC SHA-384.
 	HS384Header = "eyJhbGciOiJIUzM4NCIsInR5cCI6IkpXVCJ9"
-	// HS384Size is the signature size for HMAC SHA-384.
-	HS384Size = 48
 	// HS512 represents HMAC SHA-512 signing.
 	HS512 = "HS512"
 	// HS512Header is the pre-computed base64-encoded JWT header for HMAC SHA-512.
 	HS512Header = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9"
-	// HS512Size is the signature size for HMAC SHA-512.
-	HS512Size = 64
 )
 
 // HMAC signs and verifies JWT using HMAC SHA signing.
 type HMAC struct {
 	name   string
 	header string
-	size   int
 	hasher hash.Hash
 }
 
@@ -41,7 +34,6 @@ func NewHS256(key []byte) *HMAC {
 	return &HMAC{
 		name:   HS256,
 		header: HS256Header,
-		size:   HS256Size,
 		hasher: hmac.New(sha256.New, key),
 	}
 }
@@ -51,7 +43,6 @@ func NewHS384(key []byte) *HMAC {
 	return &HMAC{
 		name:   HS384,
 		header: HS384Header,
-		size:   HS384Size,
 		hasher: hmac.New(sha512.New384, key),
 	}
 }
@@ -61,7 +52,6 @@ func NewHS512(key []byte) *HMAC {
 	return &HMAC{
 		name:   HS512,
 		header: HS512Header,
-		size:   HS512Size,
 		hasher: hmac.New(sha512.New, key),
 	}
 }
@@ -88,14 +78,14 @@ func (h *HMAC) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (h *HMAC) Sign() ([]byte, error) {
-	s := make([]byte, 0, h.size)
+	s := make([]byte, 0, h.hasher.Size())
 	s = h.hasher.Sum(s)
 	return s, nil
 }
 
 // Verify verifies the written data's signature against a given signature.
 func (h *HMAC) Verify(signature []byte) (bool, error) {
-	s := make([]byte, 0, h.size)
+	s := make([]byte, 0, h.hasher.Size())
 	s = h.hasher.Sum(s)
 	return hmac.Equal(s, signature), nil
 }
