@@ -434,6 +434,228 @@ func BenchmarkDecodeRS512(b *testing.B) {
 	}
 }
 
+func BenchmarkEncodePS256(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS256(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodePS256LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS256(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodePS256(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "PS256")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha256.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		b.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewPS256(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodePS384(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS384(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodePS384LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS384(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodePS384(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "PS384")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New384()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA384, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		b.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewPS384(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodePS512(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestPayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS512(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkEncodePS512LargePayload(b *testing.B) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	payload, _ := newTestLargePayload(b)
+	w := new(NoOpWriter)
+
+	b.ResetTimer()
+	for b.Loop() {
+		signer := jwgo.NewPS512(publicKey, privateKey)
+		err := jwgo.NewEncoder(w, signer).Encode(payload)
+		if err != nil {
+			b.Fatalf("Encode failed %v", err)
+		}
+	}
+}
+
+func BenchmarkDecodePS512(b *testing.B) {
+	tokenHeader, tokenPayload, _, _, _ := newTestToken(b, "PS512")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		b.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		b.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA512, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		b.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	payload := jwgo.Payload{}
+	b.ResetTimer()
+
+	for b.Loop() {
+		r := strings.NewReader(token)
+		verifier := jwgo.NewPS512(publicKey, privateKey)
+		err := jwgo.NewDecoder(r, verifier).Decode(&payload)
+		if err != nil {
+			b.Fatalf("Decode failed %v", err)
+		}
+	}
+}
+
 func BenchmarkEncodeEdDSA(b *testing.B) {
 	publicKey, privateKey, err := ed25519.GenerateKey(nil)
 	if err != nil {

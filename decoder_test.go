@@ -242,6 +242,105 @@ func TestDecodeRS512Success(t *testing.T) {
 	validatePayload(t, &payload, issuedAt, expirationTime, notBefore)
 }
 
+func TestDecodePS256Success(t *testing.T) {
+	tokenHeader, tokenPayload, issuedAt, expirationTime, notBefore := newTestToken(t, "PS256")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha256.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA256, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		t.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	verifier := jwgo.NewPS256(publicKey, privateKey)
+	payload := jwgo.Payload{}
+
+	r := strings.NewReader(token)
+	err = jwgo.NewDecoder(r, verifier).Decode(&payload)
+	if err != nil {
+		t.Fatalf("Decode failed %v", err)
+	}
+
+	validatePayload(t, &payload, issuedAt, expirationTime, notBefore)
+}
+
+func TestDecodePS384Success(t *testing.T) {
+	tokenHeader, tokenPayload, issuedAt, expirationTime, notBefore := newTestToken(t, "PS384")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New384()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA384, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		t.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	verifier := jwgo.NewPS384(publicKey, privateKey)
+	payload := jwgo.Payload{}
+
+	r := strings.NewReader(token)
+	err = jwgo.NewDecoder(r, verifier).Decode(&payload)
+	if err != nil {
+		t.Fatalf("Decode failed %v", err)
+	}
+
+	validatePayload(t, &payload, issuedAt, expirationTime, notBefore)
+}
+
+func TestDecodePS512Success(t *testing.T) {
+	tokenHeader, tokenPayload, issuedAt, expirationTime, notBefore := newTestToken(t, "PS512")
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("rsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	h := sha512.New()
+	_, err = h.Write([]byte(tokenHeader + "." + tokenPayload))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	signatureBytes, err := rsa.SignPSS(rand.Reader, privateKey, crypto.SHA512, h.Sum(nil), &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash})
+	if err != nil {
+		t.Fatalf("rsa.SignPSS %v", err)
+	}
+
+	token := tokenHeader + "." + tokenPayload + "." + base64.RawURLEncoding.EncodeToString(signatureBytes)
+	verifier := jwgo.NewPS512(publicKey, privateKey)
+	payload := jwgo.Payload{}
+
+	r := strings.NewReader(token)
+	err = jwgo.NewDecoder(r, verifier).Decode(&payload)
+	if err != nil {
+		t.Fatalf("Decode failed %v", err)
+	}
+
+	validatePayload(t, &payload, issuedAt, expirationTime, notBefore)
+}
+
 func TestDecodeEdDSASuccess(t *testing.T) {
 	tokenHeader, tokenPayload, issuedAt, expirationTime, notBefore := newTestToken(t, "EdDSA")
 
