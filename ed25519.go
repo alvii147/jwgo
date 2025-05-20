@@ -11,8 +11,6 @@ const (
 	EdDSA = "EdDSA"
 	// EdDSAHeader is the pre-computed base64-encoded JWT header for Ed25519.
 	EdDSAHeader = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9"
-	// EdDSASize is the signature size for Ed25519.
-	EdDSASize = 32
 )
 
 // ED25519 signs and verifies JWT using Ed25519 signing.

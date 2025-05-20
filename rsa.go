@@ -95,7 +95,7 @@ func (r *RSAPKCS1v15) Sign() ([]byte, error) {
 	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, r.hasher.Sum(nil))
 }
 
-// Sign signs the written data.
+// Verify verifies the written data.
 func (r *RSAPKCS1v15) Verify(signature []byte) (bool, error) {
 	return rsa.VerifyPKCS1v15(r.publicKey, r.hash, r.hasher.Sum(nil), signature) == nil, nil
 }
