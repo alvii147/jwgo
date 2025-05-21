@@ -2,7 +2,9 @@ package jwgo_test
 
 import (
 	"crypto"
+	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
@@ -10,6 +12,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 	"time"
@@ -404,6 +407,141 @@ func TestEncodePS512Success(t *testing.T) {
 	}
 
 	wantHeader := `{"alg":"PS512","typ":"JWT"}`
+	if string(headerBytes) != wantHeader {
+		t.Fatalf("expected header %s, got %s", wantHeader, headerBytes)
+	}
+
+	if string(payloadBytes) != wantPayload {
+		t.Fatalf("expected payload %s, got %s", wantPayload, payloadBytes)
+	}
+}
+
+func TestEncodeES256Success(t *testing.T) {
+	payload, wantPayload := newTestPayload(t)
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("ecdsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	signer := jwgo.NewES256(publicKey, privateKey)
+	var w strings.Builder
+	err = jwgo.NewEncoder(&w, signer).Encode(payload)
+	if err != nil {
+		t.Fatalf("jwgo.NewEncoder failed %v", err)
+	}
+
+	token := w.String()
+	headerB64, headerBytes, payloadB64, payloadBytes, _, signatureBytes := decodeTokenSections(t, token)
+
+	h := sha256.New()
+	_, err = h.Write([]byte(headerB64 + "." + payloadB64))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	r := big.NewInt(0)
+	s := big.NewInt(0)
+
+	r.SetBytes(signatureBytes[:32])
+	s.SetBytes(signatureBytes[32:])
+
+	if !ecdsa.Verify(publicKey, h.Sum(nil), r, s) {
+		t.Fatal("signature not valid")
+	}
+
+	wantHeader := `{"alg":"ES256","typ":"JWT"}`
+	if string(headerBytes) != wantHeader {
+		t.Fatalf("expected header %s, got %s", wantHeader, headerBytes)
+	}
+
+	if string(payloadBytes) != wantPayload {
+		t.Fatalf("expected payload %s, got %s", wantPayload, payloadBytes)
+	}
+}
+
+func TestEncodeES384Success(t *testing.T) {
+	payload, wantPayload := newTestPayload(t)
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	if err != nil {
+		t.Fatalf("ecdsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	signer := jwgo.NewES384(publicKey, privateKey)
+	var w strings.Builder
+	err = jwgo.NewEncoder(&w, signer).Encode(payload)
+	if err != nil {
+		t.Fatalf("jwgo.NewEncoder failed %v", err)
+	}
+
+	token := w.String()
+	headerB64, headerBytes, payloadB64, payloadBytes, _, signatureBytes := decodeTokenSections(t, token)
+
+	h := sha512.New384()
+	_, err = h.Write([]byte(headerB64 + "." + payloadB64))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	r := big.NewInt(0)
+	s := big.NewInt(0)
+
+	r.SetBytes(signatureBytes[:48])
+	s.SetBytes(signatureBytes[48:])
+
+	if !ecdsa.Verify(publicKey, h.Sum(nil), r, s) {
+		t.Fatal("signature not valid")
+	}
+
+	wantHeader := `{"alg":"ES384","typ":"JWT"}`
+	if string(headerBytes) != wantHeader {
+		t.Fatalf("expected header %s, got %s", wantHeader, headerBytes)
+	}
+
+	if string(payloadBytes) != wantPayload {
+		t.Fatalf("expected payload %s, got %s", wantPayload, payloadBytes)
+	}
+}
+
+func TestEncodeES512Success(t *testing.T) {
+	payload, wantPayload := newTestPayload(t)
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	if err != nil {
+		t.Fatalf("ecdsa.GenerateKey failed %v", err)
+	}
+	publicKey := &privateKey.PublicKey
+
+	signer := jwgo.NewES512(publicKey, privateKey)
+	var w strings.Builder
+	err = jwgo.NewEncoder(&w, signer).Encode(payload)
+	if err != nil {
+		t.Fatalf("jwgo.NewEncoder failed %v", err)
+	}
+
+	token := w.String()
+	headerB64, headerBytes, payloadB64, payloadBytes, _, signatureBytes := decodeTokenSections(t, token)
+
+	h := sha512.New()
+	_, err = h.Write([]byte(headerB64 + "." + payloadB64))
+	if err != nil {
+		t.Fatalf("h.Write failed %v", err)
+	}
+
+	r := big.NewInt(0)
+	s := big.NewInt(0)
+
+	r.SetBytes(signatureBytes[:66])
+	s.SetBytes(signatureBytes[66:])
+
+	if !ecdsa.Verify(publicKey, h.Sum(nil), r, s) {
+		t.Fatal("signature not valid")
+	}
+
+	wantHeader := `{"alg":"ES512","typ":"JWT"}`
 	if string(headerBytes) != wantHeader {
 		t.Fatalf("expected header %s, got %s", wantHeader, headerBytes)
 	}
