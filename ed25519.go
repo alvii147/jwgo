@@ -58,6 +58,6 @@ func (e *ED25519) Sign() ([]byte, error) {
 }
 
 // Verify verifies the written data's signature against a given signature.
-func (e *ED25519) Verify(signature []byte) (bool, error) {
-	return ed25519.Verify(e.publicKey, e.data, signature), nil
+func (e *ED25519) Verify(signature []byte) bool {
+	return ed25519.Verify(e.publicKey, e.data, signature)
 }

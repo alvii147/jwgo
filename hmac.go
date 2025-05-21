@@ -82,6 +82,6 @@ func (h *HMAC) Sign() ([]byte, error) {
 }
 
 // Verify verifies the written data's signature against a given signature.
-func (h *HMAC) Verify(signature []byte) (bool, error) {
-	return hmac.Equal(h.hasher.Sum(nil), signature), nil
+func (h *HMAC) Verify(signature []byte) bool {
+	return hmac.Equal(h.hasher.Sum(nil), signature)
 }

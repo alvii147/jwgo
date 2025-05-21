@@ -19,5 +19,5 @@ type Verifier interface {
 	fmt.Stringer
 	io.Writer
 	Grow(n int)
-	Verify([]byte) (bool, error)
+	Verify([]byte) bool
 }

@@ -111,16 +111,16 @@ func (e *ECDSA) Sign() ([]byte, error) {
 }
 
 // Verify verifies the written data's signature against a given signature.
-func (e *ECDSA) Verify(signature []byte) (bool, error) {
+func (e *ECDSA) Verify(signature []byte) bool {
 	r := big.NewInt(0)
 	s := big.NewInt(0)
 
 	if len(signature) != e.size*2 {
-		return false, nil
+		return false
 	}
 
 	r.SetBytes(signature[:e.size])
 	s.SetBytes(signature[e.size:])
 
-	return ecdsa.Verify(e.publicKey, e.hasher.Sum(nil), r, s), nil
+	return ecdsa.Verify(e.publicKey, e.hasher.Sum(nil), r, s)
 }

@@ -82,11 +82,7 @@ func (dec *decoder) Decode(v TimeConstrainedPayload) error {
 		return fmt.Errorf("dec.verifier.Write failed for payload: %w", err)
 	}
 
-	verified, err := dec.verifier.Verify(signatureBytes)
-	if err != nil {
-		return fmt.Errorf("dec.verifier.Verify failed: %w", err)
-	}
-
+	verified := dec.verifier.Verify(signatureBytes)
 	if !verified {
 		return ErrInvalidSignature
 	}

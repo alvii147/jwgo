@@ -107,6 +107,6 @@ func (rp *RSAPSS) Sign() ([]byte, error) {
 }
 
 // Verify verifies the written data.
-func (rp *RSAPSS) Verify(signature []byte) (bool, error) {
-	return rsa.VerifyPSS(rp.publicKey, rp.hash, rp.hasher.Sum(nil), signature, PSSVerifyOptions) == nil, nil
+func (rp *RSAPSS) Verify(signature []byte) bool {
+	return rsa.VerifyPSS(rp.publicKey, rp.hash, rp.hasher.Sum(nil), signature, PSSVerifyOptions) == nil
 }
