@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-    <strong><i>jwgo</i></strong> is a Go library efficient generation and parsing of JSON web tokens.
+    <strong><i>jwgo</i></strong> is a Go library for efficient creation and parsing of JSON web tokens.
 </p>
 
 <div align="center">
