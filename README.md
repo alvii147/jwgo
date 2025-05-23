@@ -122,3 +122,13 @@ Method Name | Method Details | Constructor Function
 `ES384` | ECDSA + SHA-384 | `NewES384`
 `ES512` | ECDSA + SHA-512 | `NewES512`
 `EdDSA` | Ed25519 | `NewEdDSA`
+
+# Benchmark
+
+The full results of benchmark can be found [here](benchmark/results.txt). The following plots demonstrate the results of benchmarking `jwgo` against `github.com/golang-jwt/jwt`, which is the most popular Golang library for creating/parsing JWTs:
+
+![Runtime Benchmark Plot](benchmark/runtime_HS256.png)
+
+![Memory Benchmark Plot](benchmark/memory_HS256.png)
+
+![Allocations Benchmark Plot](benchmark/allocations_HS256.png)

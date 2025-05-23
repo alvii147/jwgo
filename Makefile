@@ -7,6 +7,7 @@ ifdef TESTCASE
 endif
 
 BENCHOPTS=-benchmem
+BENCHDIR=benchmark/
 
 .PHONY: test
 test:
@@ -14,4 +15,4 @@ test:
 
 .PHONY: test
 bench:
-	$(GO) test $(BENCHOPTS) -bench=$(PKG)
+	cd $(BENCHDIR); $(GO) test $(BENCHOPTS) -bench=$(PKG); cd -
