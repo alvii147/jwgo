@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
+	"fmt"
 )
 
 const (
@@ -54,7 +55,12 @@ func (e *ED25519) Write(p []byte) (int, error) {
 
 // Sign signs the written data.
 func (e *ED25519) Sign() ([]byte, error) {
-	return e.privateKey.Sign(rand.Reader, e.data, crypto.Hash(0))
+	signature, err := e.privateKey.Sign(rand.Reader, e.data, crypto.Hash(0))
+	if err != nil {
+		return nil, fmt.Errorf("e.privateKey.Sign failed: %w", err)
+	}
+
+	return signature, nil
 }
 
 // Verify verifies the written data's signature against a given signature.

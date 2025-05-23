@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"hash"
 	"math/big"
 )
@@ -100,7 +101,7 @@ func (e *ECDSA) Write(p []byte) (int, error) {
 func (e *ECDSA) Sign() ([]byte, error) {
 	r, s, err := ecdsa.Sign(rand.Reader, e.privateKey, e.hasher.Sum(nil))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ecdsa.Sign failed: %w", err)
 	}
 
 	signature := make([]byte, e.size*2)

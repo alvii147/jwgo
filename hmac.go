@@ -4,6 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"hash"
 )
 
@@ -73,7 +74,12 @@ func (h *HMAC) Grow(n int) {
 
 // Write writes data for signing.
 func (h *HMAC) Write(p []byte) (int, error) {
-	return h.hasher.Write(p)
+	n, err := h.hasher.Write(p)
+	if err != nil {
+		return n, fmt.Errorf("h.hasher.Write failed: %w", err)
+	}
+
+	return n, nil
 }
 
 // Sign signs the written data.

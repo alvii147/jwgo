@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/sha512"
+	"fmt"
 	"hash"
 )
 
@@ -87,12 +88,22 @@ func (r *RSAPKCS1v15) Grow(n int) {
 
 // Write writes data for signing.
 func (r *RSAPKCS1v15) Write(p []byte) (int, error) {
-	return r.hasher.Write(p)
+	n, err := r.hasher.Write(p)
+	if err != nil {
+		return n, fmt.Errorf("r.hasher.Write failed: %w", err)
+	}
+
+	return n, nil
 }
 
 // Sign signs the written data.
 func (r *RSAPKCS1v15) Sign() ([]byte, error) {
-	return rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, r.hasher.Sum(nil))
+	signature, err := rsa.SignPKCS1v15(rand.Reader, r.privateKey, r.hash, r.hasher.Sum(nil))
+	if err != nil {
+		return nil, fmt.Errorf("rsa.SignPKCS1v15 failed: %w", err)
+	}
+
+	return signature, nil
 }
 
 // Verify verifies the written data.
