@@ -66,7 +66,7 @@ func main() {
 	}
 
 	fmt.Println(w.String())
-    // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwaW...
+	// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwaW...
 }
 ```
 
@@ -125,7 +125,7 @@ Method Name | Method Details | Constructor Function
 
 # Benchmark
 
-The full results of benchmark can be found [here](benchmark/results.txt). The following plots demonstrate the results of benchmarking `jwgo` against `github.com/golang-jwt/jwt`, which is the most popular Golang library for creating/parsing JWTs:
+The full results of benchmark can be found [here](benchmark/results.txt). The following plots demonstrate the results of benchmarking the performance of HMAC-SHA256 JWT creation and parsing of `jwgo` against that of `github.com/golang-jwt/jwt`, which is the most popular Golang library for creating/parsing JWTs:
 
 ![Runtime Benchmark Plot](benchmark/runtime_HS256.png)
 
